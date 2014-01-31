@@ -252,6 +252,12 @@ default_instance forall 'a. ( SetType 'a )
   let setElemCompare = defaultCompare
 end
 
+(* horrible hack! just for testing. Turning type classes of in OCaml *)
+let inline {ocaml} (=)  = unsafe_structural_equality
+let inline {ocaml} (<>) = unsafe_structural_inequality
+let inline {ocaml} setElemCompare = defaultCompare
+
+
 (* ========================================================================== *)
 (* Instantiations                                                             *)
 (* ========================================================================== *)
@@ -309,8 +315,9 @@ instance forall 'a 'b. Ord 'a, Ord 'b => (Ord ('a * 'b))
   let (>=) = pairGreaterEq
 end
 
+
 val test : forall 'a 'b. SetType 'a, SetType 'b => ('a * 'b) -> ('a * 'b) -> ordering
-let {ocaml} test = pairCompare setElemCompare setElemCompare
+let {ocaml} test x y = pairCompare setElemCompare setElemCompare x y
 
 
 instance forall 'a 'b. SetType 'a, SetType 'b => (SetType ('a * 'b))
