@@ -149,7 +149,9 @@ let ast_def_to_target_opt : Ast.def_aux -> Ast.targets option = function
                   Ast.Let_transform(_,_,target_opt,_) |
                   Ast.Let_rec(_,_,target_opt,_)) -> target_opt
     | Ast.Indreln(_,target_opt,_,_) -> target_opt
-    | Ast.Lemma(Ast.Lemma_named(_,target_opt,_,_,_)) -> target_opt
+    | Ast.Lemma(Ast.Lemma_named(Lemma_assert _,None,_,_,_)) -> None
+    | Ast.Lemma(Ast.Lemma_named(_,None,_,_,_)) -> Some (Targets_non_exec None)
+    | Ast.Lemma(Ast.Lemma_named(_,Some targets,_,_,_)) -> Some targets
     | Ast.Type_def _ -> None
     | Ast.Declaration _ -> None
     | Ast.Module _ -> None
@@ -1728,7 +1730,7 @@ module Make_checker(T : sig
       (fun n (t,l) ->
          let const_data = Nfmap.apply T.new_module_env.v_env n in
            match const_data with
-             | None ->
+             | None -> () (*
                  (* The constant is not defined yet. Check whether the definition is target
                     specific and raise an exception in this case. *)
                  begin
@@ -1738,7 +1740,7 @@ module Make_checker(T : sig
                            "target-specific definition without preceding 'val' specification"
                            Name.pp n)
                      | None -> ()
-                 end
+                 end *)
              | Some(c) ->
                  (* The constant is defined. Check, whether we are alowed to add another, target specific
                     definition. *)
