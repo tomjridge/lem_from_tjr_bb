@@ -70,13 +70,13 @@ isa-lib-tests:
 	@ln -s ${ISA_BUILD_DIR} isa-build-dir       
 	@../lem -isa -outdir ${ISA_BUILD_DIR} -wl ign -wl_auto_import err -wl_rename err ${LIBS} -only_auxiliary -auxiliary_level auto -only_changed_output
 	@./gen-isa-tests.sh ${ISA_BUILD_DIR} 
-	@echo "please run\n   isabelle jedit ${ISA_BUILD_DIR}/LemTests.thy"
+	@echo "please run\n   isabelle jedit -d ../isabelle-lib/ -l LEM ${ISA_BUILD_DIR}/LemTests.thy"
 
 isa-lib-tests-reuse: 
 	@mkdir -p ${ISA_BUILD_DIR_REUSED} || true
 	@../lem -isa -outdir ${ISA_BUILD_DIR_REUSED} -wl ign -wl_auto_import err -wl_rename err ${LIBS} -only_auxiliary -auxiliary_level auto -only_changed_output
 	@./gen-isa-tests.sh ${ISA_BUILD_DIR_REUSED} 
-	@echo "please run\n   isabelle jedit ${ISA_BUILD_DIR_REUSED}/LemTests.thy"
+	@echo "please run\n   isabelle jedit -d ../isabelle-lib/ -l LEM ${ISA_BUILD_DIR_REUSED}/LemTests.thy"
 
 
 markdown: $(markdown_targets)

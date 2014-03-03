@@ -8,7 +8,7 @@
 
 declare {ocaml;isabelle;hol;coq} rename module = lem_string
 
-open import Bool Basic_classes List
+open import Bool Basic_classes List Num
 open import {ocaml} `Xstring`
 open import {hol} `stringTheory`
 open import {coq} `Coq.Strings.Ascii` `Coq.Strings.String`
@@ -96,7 +96,7 @@ assert stringLength_1: (stringLength "abc" = 3)
 assert stringLength_2: (stringLength "123456" = 6)
 
 (* ----------------------- *)
-(* string concatenation    *)
+(* string append           *)
 (* ----------------------- *)
 
 val (^) [`stringAppend`] : string -> string -> string
@@ -107,6 +107,19 @@ declare isabelle target_rep function stringAppend = infix `@`
 declare coq      target_rep function stringAppend = `String.append`
 
 assert stringAppend_0 : ("Hello" ^ " " ^ "World!" = "Hello World!")
+
+
+(* ----------------------- *)
+(* string concatenation    *)
+(* ----------------------- *)
+
+val stringConcat : list string -> string
+let stringConcat s = List.foldr (^) "" s
+
+declare hol      target_rep function stringConcat = `CONCAT`
+declare ocaml    target_rep function stringConcat s = `String.concat` "" s
+
+assert stringConcat_0 : (stringConcat ["H"; "e"; "l"; "l"; "o"] = "Hello")
 
 (* --------------------------- *)
 (* equality                    *)
@@ -169,4 +182,205 @@ assert string_patterns_1: (
     | cons_string c s -> (makeString 5 c ^ s)
   end = "aaaaabc"
 )
+
+
+(******************************************************************************)
+(* Converting to and from Strings                                             *)
+(******************************************************************************)
+
+class (Show 'a)
+  val show : 'a -> string
+end
+
+
+(* -------------------------------- *)
+(* decimal encoding of natural nums *)
+(* -------------------------------- *)
+
+
+(***********)
+(* natural *)
+(***********)
+
+(* [digitFromNatural n] encodes n as a digit character. All numbers < 16 map to
+   hex chars. Numbers till 31 are supported as well. All others map to "-" *)
+val digitFromNatural : natural -> char
+let digitFromNatural = function
+  | 0  -> #'0'
+  | 1  -> #'1'
+  | 2  -> #'2'
+  | 3  -> #'3'
+  | 4  -> #'4'
+  | 5  -> #'5'
+  | 6  -> #'6'
+  | 7  -> #'7'
+  | 8  -> #'8'
+  | 9  -> #'9'
+  | 10 -> #'A'
+  | 11 -> #'B'
+  | 12 -> #'C'
+  | 13 -> #'D'
+  | 14 -> #'E'
+  | 15 -> #'F'
+  | 16 -> #'G'
+  | 17 -> #'H'
+  | 18 -> #'I'
+  | 19 -> #'J'
+  | 20 -> #'K'
+  | 21 -> #'L'
+  | 22 -> #'M'
+  | 23 -> #'N'
+  | 24 -> #'O'
+  | 25 -> #'P'
+  | 26 -> #'Q'
+  | 27 -> #'R'
+  | 28 -> #'S'
+  | 29 -> #'T'
+  | 30 -> #'U'
+  | 31 -> #'V'
+  | _  -> #'-'
+end
+
+val stringFromNaturalAux : natural -> natural -> list char -> list char
+let rec stringFromNaturalAux base n acc =
+  if base < 2 then (toCharList "too small base") else (
+  if n <= 0 then
+    if (List.null acc) then [#'0'] else acc
+  else
+    stringFromNaturalAux base (n / base) (digitFromNatural (n mod base) :: acc))
+declare termination_argument stringFromNaturalAux = automatic
+
+(* [stringFromNatural base n] converts [n] to a string using base [base]. The
+   common bases 2, 8, 10, 16 are supported. Others up to 32 are supported as
+   well, but might not work in the future any more. *)
+val stringFromNatural : natural -> natural -> string
+let stringFromNatural b n = toString (stringFromNaturalAux b n [])
+
+assert stringFromNatural_0: (stringFromNatural 10 0 = "0")
+assert stringFromNatural_1: (stringFromNatural 10 1 = "1")
+assert stringFromNatural_20: (stringFromNatural 10 20 = "20")
+assert stringFromNatural_103: (stringFromNatural 10 458 = "458")
+
+assert stringFromNatural_hex_0:  (stringFromNatural 16 0 = "0")
+assert stringFromNatural_hex_34: (stringFromNatural 16 0X34 = "34")
+assert stringFromNatural_hex_20: (stringFromNatural 16 0X20 = "20")
+assert stringFromNatural_hex_103: (stringFromNatural 16 0X458 = "458")
+
+
+(* [decStringFromNatural n] converts [n] to a decimal string. *)
+val decStringFromNatural : natural -> string
+let decStringFromNatural n = stringFromNatural 10 n
+
+declare hol   target_rep function decStringFromNatural = `num_to_dec_string`
+declare ocaml target_rep function decStringFromNatural = `Big_int.string_of_big_int`
+
+instance (Show natural)
+  let show = decStringFromNatural
+end
+
+
+(***********)
+(* nat     *)
+(***********)
+
+val decStringFromNat : nat -> string
+let decStringFromNat n = stringFromNatural 10 (naturalFromNat n)
+
+declare ocaml target_rep function decStringFromNat = `string_of_int`
+
+
+assert decStringFromNat_0: (decStringFromNat 0 = "0")
+assert decStringFromNat_54: (decStringFromNat 54 = "54")
+assert decStringFromNat_123: (decStringFromNat 123 = "123")
+
+instance (Show nat)
+  let show = decStringFromNat
+end
+
+
+(***********)
+(* integer *)
+(***********)
+
+val stringFromInteger : natural -> integer -> string
+let stringFromInteger base i = 
+   if (i < 0) then
+      "-" ^ (stringFromNatural base (naturalFromInteger (abs i)))
+   else
+      stringFromNatural base (naturalFromInteger i)
+
+val decStringFromInteger : integer -> string
+let decStringFromInteger i = stringFromInteger 10 i
+declare ocaml target_rep function decStringFromInteger = `Big_int.string_of_big_int`
+
+
+assert decStringFromInteger_0:    (decStringFromInteger 0 = "0")
+assert decStringFromInteger_54:   (decStringFromInteger 54 = "54")
+assert decStringFromInteger_123:  (decStringFromInteger 123 = "123")
+assert decStringFromInteger_n54:  (decStringFromInteger (~54) = "-54")
+assert decStringFromInteger_n123: (decStringFromInteger (~123) = "-123")
+
+instance (Show integer)
+  let show = decStringFromInteger
+end
+
+
+(***********)
+(* int     *)
+(***********)
+
+val decStringFromInt : int -> string
+let decStringFromInt n = stringFromInteger 10 (integerFromInt n)
+
+declare ocaml target_rep function decStringFromInt = `string_of_int`
+
+assert decStringFromInt_0:    (decStringFromInt 0 = "0")
+assert decStringFromInt_54:   (decStringFromInt 54 = "54")
+assert decStringFromInt_123:  (decStringFromInt 123 = "123")
+assert decStringFromInt_n54:  (decStringFromInt (~54) = "-54")
+assert decStringFromInt_n123: (decStringFromInt (~123) = "-123")
+
+instance (Show int)
+  let show = decStringFromInt
+end
+
+
+
+(***********)
+(* int32   *)
+(***********)
+
+val decStringFromInt32 : int32 -> string
+let decStringFromInt32 n = stringFromInteger 10 (integerFromInt32 n)
+
+declare ocaml target_rep function decStringFromInt32 = `Int32.to_string`
+
+assert decStringFromInt32_0:    (decStringFromInt32 0 = "0")
+assert decStringFromInt32_54:   (decStringFromInt32 54 = "54")
+assert decStringFromInt32_123:  (decStringFromInt32 123 = "123")
+assert decStringFromInt32_n54:  (decStringFromInt32 (~54) = "-54")
+assert decStringFromInt32_n123: (decStringFromInt32 (~123) = "-123")
+
+instance (Show int32)
+  let show = decStringFromInt32
+end
+
+(***********)
+(* int64   *)
+(***********)
+
+val decStringFromInt64 : int64 -> string
+let decStringFromInt64 n = stringFromInteger 10 (integerFromInt64 n)
+
+declare ocaml target_rep function decStringFromInt64 = `Int64.to_string`
+
+assert decStringFromInt64_0:    (decStringFromInt64 0 = "0")
+assert decStringFromInt64_54:   (decStringFromInt64 54 = "54")
+assert decStringFromInt64_123:  (decStringFromInt64 123 = "123")
+assert decStringFromInt64_n54:  (decStringFromInt64 (~54) = "-54")
+assert decStringFromInt64_n123: (decStringFromInt64 (~123) = "-123")
+
+instance (Show int64)
+  let show = decStringFromInt64
+end
 

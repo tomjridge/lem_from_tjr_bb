@@ -11,7 +11,7 @@ declare {isabelle;ocaml;hol;coq} rename module = lem_num
 
 open import Bool Basic_classes
 open import {isabelle} `~~/src/HOL/Word/Word`
-open import {hol} `integerTheory` `intReduce` `wordsTheory` `wordsLib`
+open import {hol} `integerTheory` `intReduce` `wordsTheory` `wordsLib` `lemTheory`
 open import {coq} `Coq.ZArith.BinInt` `Coq.ZArith.Zpower` `Coq.ZArith.Zdiv` `Coq.ZArith.Zmax`
 
 (* ========================================================================== *)
@@ -157,8 +157,6 @@ declare tex      target_rep type integer = `$\mathbb{Z}$`
 (* ----------------------- *)
 (* bint                    *)
 (* ----------------------- *)
-
-(* TODO the bounded ints are only partially implemented, use with care. *)
 
 (* 32 bit integers *)
 type int32 
@@ -1891,6 +1889,3 @@ assert nat_from_int64_0: natFromInt64 0 = 0
 assert nat_from_int64_1: natFromInt64 1 = 1
 assert nat_from_int64_2: natFromInt64 (~ 2) = 2
 
-val string_of_natural : natural -> string
-declare ocaml target_rep function string_of_natural = `Big_int.string_of_big_int`
-let inline {coq} string_of_natural n = "TODO"

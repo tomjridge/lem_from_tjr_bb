@@ -975,6 +975,11 @@ declare termination_argument allDistinct = automatic
 
 declare hol target_rep function allDistinct = `ALL_DISTINCT`
 
+assert allDistinct_0: (allDistinct [(0:nat);1;2;3])
+assert allDistinct_1: (allDistinct [(0:nat);23;6;3])
+assert allDistinct_2: not (allDistinct [(0:nat);1;2;1])
+assert allDistinct_3: (allDistinct ([] : list nat))
+
 (* ========================================================================== *)
 (* Comments (not clean yet, please ignore the rest of the file)               *)
 (* ========================================================================== *)
