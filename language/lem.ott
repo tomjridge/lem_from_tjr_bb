@@ -479,10 +479,10 @@ exp_aux :: '' ::=
   | ( exp )						:: :: Paren
   | begin exp end					:: :: Begin
     {{ com Alternate syntax for $\ottnt(exp)$ }}
-  | begin_aspect x exp end				:: :: Aspect
+  | begin_aspect x exp end_aspect			:: :: Aspect
     {{ com Aspects }}
-  | begin_aspect x exp1 else_aspect exp2 end		:: :: Aspect_with_else
-    {{ com Aspects with alternative }}
+  | begin_aspect x exp1 aspect_fallback exp2 end	:: :: Aspect_with_fallback
+    {{ com Aspects with alternative if the aspect is excluded }}
   | if exp1 then exp2 else exp3				:: :: If
     {{ com Conditionals }}
   | exp1 '::' exp2					:: :: Cons

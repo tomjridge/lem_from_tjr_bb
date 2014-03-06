@@ -3,10 +3,10 @@ open import Bool
 let test1 x =
    (begin_aspect a1
      false
-    end) || false
+    end_aspect) || false
 
 let test2 x =
    let x1 = true in
-   let x2 = begin_aspect a1 false else_aspect (* skipped aspect a1 *) x1 end in
-   let x3 = begin_aspect a2 false else_aspect (* skipped aspect a2 *) x2 end in
+   let x2 = begin_aspect a1 false aspect_fallback (* skipped aspect a1 *) x1 end_aspect in
+   let x3 = begin_aspect a2 false aspect_fallback (* skipped aspect a2 *) x2 end_aspect in
    x3

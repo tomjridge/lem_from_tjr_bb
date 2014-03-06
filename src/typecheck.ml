@@ -1385,14 +1385,14 @@ module Make_checker(T : sig
             let n = Name.add_pre_lskip (fst n) (Name.add_lskip (Name.from_rope (snd n))) in
             let exp = check_exp l_e e in
               C.equate_types l "aspect expression" ret_type (exp_to_typ exp);
-              A.mk_aspect l sk1 n exp sk2 rt
-        | Ast.Aspect_with_else(sk1,n,e1,sk2,e2,sk3) ->
+              A.mk_aspect l sk1 n exp None sk2 rt
+        | Ast.Aspect_with_fallback(sk1,n,e1,sk2,e2,sk3) ->
             let n = Name.add_pre_lskip (fst n) (Name.add_lskip (Name.from_rope (snd n))) in
             let exp1 = check_exp l_e e1 in
             let exp2 = check_exp l_e e2 in
               C.equate_types l "aspect expression" ret_type (exp_to_typ exp1);
               C.equate_types l "aspect expression" (exp_to_typ exp1) (exp_to_typ exp2);
-              A.mk_aspect_with_else l sk1 n exp1 sk2 exp2 sk3 rt
+              A.mk_aspect l sk1 n exp1 (Some (sk2, exp2)) sk3 rt
         | Ast.If(sk1,e1,sk2,e2,sk3,e3) ->
             let exp1 = check_exp l_e e1 in
             let exp2 = check_exp l_e e2 in
