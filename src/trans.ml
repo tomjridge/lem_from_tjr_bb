@@ -1159,6 +1159,18 @@ let rec is_ext_aspect_without_fallback_exp_filter aspects_filter comp (e :exp) :
     | Typed (_, e, _, _, _) -> is_ext_aspect_without_fallback_exp_filter aspects_filter comp e
     | _ -> false
 
+let remove_aspects_aux remove_all aspects_filter e =
+  match C.exp_to_term e with
+    | Aspect(s1,n,e1,fb,s2) -> begin match aspects_filter n with
+        | None -> if remove_all then Some e else None
+        | Some true -> Some e1
+        | Some false -> begin 
+            match fb with 
+              | None -> None
+              | Some (_, e2) -> Some e2
+          end
+      end
+    | _ -> None
 
 let remove_aspects remove_all aspects_filter _ e =
   let l_unk = Ast.Trans(true, "remove_aspects", Some (exp_to_locn e)) in
@@ -1186,32 +1198,24 @@ let remove_aspects remove_all aspects_filter _ e =
           None
     | If(_,c_exp,_,e_true,_,e_false) ->
         let c_exp' = strip_wrapper_exps c_exp in
-        (match (C.exp_to_term c_exp') with
-          | Aspect (_, n, e_aspect, Some (_, e_fallback), _) -> begin
-               let e_to_check_opt = begin
-                 match aspects_filter n with
-                   | None -> if remove_all then Some e_aspect else None
-                   | Some false -> Some e_fallback
-                   | Some true -> Some e_aspect
-               end in
-               match e_to_check_opt with
-                 | None -> None
-                 | Some e_cond -> begin
-                     let e_cond' = strip_wrapper_exps e_cond in
-                     if (is_tf_exp true e_cond') then Some e_true else
-                     if (is_tf_exp false e_cond') then Some e_false else None
-                   end
+        (match (remove_aspects_aux remove_all aspects_filter c_exp') with
+          | None -> None
+          | (Some c_exp'') -> begin
+               let c_exp''' = strip_wrapper_exps c_exp'' in
+               if (is_tf_exp true c_exp''') then Some e_true else
+               if (is_tf_exp false c_exp''') then Some e_false else None
             end
-          | _ -> None)
-    | Aspect(s1,n,e1,fb,s2) -> begin match aspects_filter n with
-        | None -> if remove_all then Some e else None
-        | Some true -> Some e1
-        | Some false -> begin 
-            match fb with 
-              | None -> None
-              | Some (_, e2) -> Some e2
-          end
-      end
+        )
+    | Let(_,(Let_val (p, _, _, e), _),_,e2) ->
+        let e' = strip_wrapper_exps e in
+        (match (remove_aspects_aux remove_all aspects_filter e') with
+          | None -> None
+          | Some e'' -> begin
+              match (dest_var_exp e'', dest_ext_var_pat p) with
+                | (Some e_n, Some p_n) -> if (Name.compare e_n p_n = 0) then Some e2 else None
+                | _ -> None           
+          end)
+    | Aspect _ -> remove_aspects_aux remove_all aspects_filter e
     | _  -> None
 
 

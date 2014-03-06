@@ -12,6 +12,9 @@ let test2 x =
    let x4a = if (begin_aspect a3 false aspect_fallback true end_aspect) then x2 else x3 in
    let x4b = if (begin_aspect a3 true aspect_fallback false end_aspect) then x2 else x3 in
    let x4c = if (begin_aspect a3 x2 aspect_fallback x3 end_aspect) then x2 else x3 in
+   let x5 = x4a || x4b || x4c in
+   let x5 = begin_aspect a4 true aspect_fallback x5 end_aspect in
+   let x5 = begin_aspect a5 x5 aspect_fallback false end_aspect in
    x4a
 
 
