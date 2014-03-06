@@ -290,6 +290,8 @@ module type Target = sig
   val let_in : t
   val let_end : t
   val begin_kwd : t
+  val begin_aspect_kwd : t
+  val else_aspect_kwd : t
   val end_kwd : t
   val forall : t
   val exists : t
@@ -498,6 +500,8 @@ module Identity : Target = struct
   let let_in = kwd "in"
   let let_end = emp
   let begin_kwd = kwd "begin"
+  let begin_aspect_kwd = kwd "begin_aspect"
+  let else_aspect_kwd = kwd "else_aspect"
   let end_kwd = kwd "end"
   let forall = kwd "forall"
   let exists = kwd "exists"
@@ -703,6 +707,8 @@ module Tex : Target = struct
   let let_in = bkwd "in"
   let let_end = emp
   let begin_kwd = bkwd "begin"
+  let begin_aspect_kwd = bkwd "begin aspect"
+  let else_aspect_kwd = bkwd "else aspect"
   let end_kwd = bkwd "end"
   let forall = kwd "\\forall"
   let exists = kwd "\\exists"
@@ -718,7 +724,7 @@ module Tex : Target = struct
   let setcomp_sep = texspace ^ kwd "|" ^ texspace
   let cons_op = kwd "::"
   let pat_add_op n s1 s2 i =  n ^ ws s1 ^ kwd "+" ^ ws s2 ^ const_num i None
-  let set_sep = kwd ";\\,"
+  let set_sep = kwd ",\\,"
   let list_begin = kwd "["
   let list_end = kwd "]"
   let vector_begin = kwd "[|"
@@ -921,7 +927,9 @@ module Isa : Target = struct
 
   let begin_kwd = kwd "("
   let end_kwd = kwd ")"
-  
+  let aspect_kwd = err "aspect in Isabelle"
+  let else_aspect_kwd = err "aspect in Isabelle"
+
   let forall = kwd "\\<forall>"
   let exists = kwd "\\<exists>"
 
@@ -1115,6 +1123,8 @@ module Hol : Target = struct
   let let_in = kwd "in"
   let let_end = emp
   let begin_kwd = kwd "("
+  let begin_aspect_kwd = kwd "("
+  let else_aspect_kwd = err "else aspect in HOL"
   let end_kwd = kwd ")"
   let forall = kwd "!"
   let exists = kwd "?"
@@ -1733,6 +1743,16 @@ match C.exp_to_term e with
 
   | Begin(s1,e,s2) ->
       ws s1 ^ T.begin_kwd ^ exp print_backend e ^ ws s2 ^ T.end_kwd
+
+  | Aspect(s1,n,e,s2) ->
+      ws s1 ^ T.begin_aspect_kwd ^ 
+      Name.to_output Component n ^ exp print_backend e ^ ws s2 ^ T.end_kwd
+
+  | Aspect_with_else(s1,n,e1,s2,e2,s3) ->
+      ws s1 ^ T.begin_aspect_kwd ^ 
+      Name.to_output Component n ^ exp print_backend e1 ^ ws s2 ^ 
+      T.else_aspect_kwd ^ exp print_backend e2 ^ ws s3 ^ 
+      T.end_kwd
 
   | If(s1,e1,s2,e2,s3,e3) ->
       block is_user_exp 0 (

@@ -209,6 +209,10 @@ let to_sep_list_last o f g (o1,l,o2) =
 let map f (o1,l,o2) =
   (o1, List.map (fun (x,y) -> (f x, y)) l, option_map f o2)
 
+let filter p (o1,l,o2) =
+  (o1, List.filter (fun (x,y) -> p x) l, 
+     match o2 with None -> None | Some x -> if p x then Some x else None)
+
 let cons_sep x (o1,l,o2) =
   match o1 with
     | None ->

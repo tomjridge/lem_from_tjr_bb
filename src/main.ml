@@ -101,6 +101,14 @@ let options = Arg.align ([
     Arg.Unit (add_backend Target.Target_ident),
     " generate input on stdout\n\n");
 
+  ( "-incl_aspect", 
+    Arg.String (fun l -> Target_trans.aspects_filter_includes := l::!Target_trans.aspects_filter_includes),
+    " includes an aspect in the output");
+
+  ( "-excl_aspect", 
+    Arg.String (fun l -> Target_trans.aspects_filter_excludes := l::!Target_trans.aspects_filter_excludes),
+    " excludes an aspect in the output");
+
   ( "-lib", 
     Arg.String (fun l -> lib_paths_ref := l :: (!lib_paths_ref)),
     " add path to library path; if no lib is given the default '"^(default_library)^")' is used. Set LEMLIB environment variable to change this default.");
@@ -168,7 +176,8 @@ let _ =
 
 let check_modules env modules =
   (* The checks. Modify these lists to add more. *)
-  let exp_checks env = [Patterns.check_match_exp_warn env; Syntactic_tests.check_id_restrict_e env] in
+  let module T = Trans.Macros(struct let env = env end) in
+  let exp_checks env = [T.check_aspects; Patterns.check_match_exp_warn env; Syntactic_tests.check_id_restrict_e env] in
   let pat_checks env = [Syntactic_tests.check_id_restrict_p env; Patterns.check_number_patterns env] in
   let def_checks env = [Patterns.check_match_def_warn env;
                         Syntactic_tests.check_decidable_equality_def env;
