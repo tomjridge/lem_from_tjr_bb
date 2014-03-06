@@ -1184,6 +1184,25 @@ let remove_aspects remove_all aspects_filter _ e =
           Some (C.mk_set l_unk s1 (Seplist.filter (is_ext_aspect_without_fallback_exp_filter aspects_filter true) es) s2 (exp_to_typ e))
         else
           None
+    | If(_,c_exp,_,e_true,_,e_false) ->
+        let c_exp' = strip_wrapper_exps c_exp in
+        (match (C.exp_to_term c_exp') with
+          | Aspect (_, n, e_aspect, Some (_, e_fallback), _) -> begin
+               let e_to_check_opt = begin
+                 match aspects_filter n with
+                   | None -> if remove_all then Some e_aspect else None
+                   | Some false -> Some e_fallback
+                   | Some true -> Some e_aspect
+               end in
+               match e_to_check_opt with
+                 | None -> None
+                 | Some e_cond -> begin
+                     let e_cond' = strip_wrapper_exps e_cond in
+                     if (is_tf_exp true e_cond') then Some e_true else
+                     if (is_tf_exp false e_cond') then Some e_false else None
+                   end
+            end
+          | _ -> None)
     | Aspect(s1,n,e1,fb,s2) -> begin match aspects_filter n with
         | None -> if remove_all then Some e else None
         | Some true -> Some e1

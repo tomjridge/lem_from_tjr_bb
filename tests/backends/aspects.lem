@@ -9,4 +9,9 @@ let test2 x =
    let x1 = true in
    let x2 = begin_aspect a1 false aspect_fallback (* skipped aspect a1 *) x1 end_aspect in
    let x3 = begin_aspect a2 false aspect_fallback (* skipped aspect a2 *) x2 end_aspect in
-   x3
+   let x4a = if (begin_aspect a3 false aspect_fallback true end_aspect) then x2 else x3 in
+   let x4b = if (begin_aspect a3 true aspect_fallback false end_aspect) then x2 else x3 in
+   let x4c = if (begin_aspect a3 x2 aspect_fallback x3 end_aspect) then x2 else x3 in
+   x4a
+
+

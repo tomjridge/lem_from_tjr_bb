@@ -272,6 +272,10 @@ val dest_tf_exp : exp -> bool option
 (** [is_tf_exp v e] checks whether [e] is a [true] or [false] expression. *)
 val is_tf_exp : bool -> exp -> bool
 
+(** [strip_wrapper_exps e] strips parentheisis, type annotations and begin/end from
+    an expression and returns the core. Often it returns the expression unmodified. *)
+val strip_wrapper_exps : exp -> exp
+
 (** Destructor for constants expressions *)
 val dest_const_exp : exp -> const_descr_ref id option
 
