@@ -87,6 +87,8 @@ let kw_table =
      ("true",                    (fun x -> True(x)));
      ("false",                   (fun x -> False(x)));
      ("begin",                   (fun x -> Begin_(x)));
+     ("begin_aspect",            (fun x -> Begin_aspect(x)));
+     ("else_aspect",             (fun x -> Else_aspect(x)));
      ("if",                      (fun x -> If_(x)));
      ("then",                    (fun x -> Then(x)));
      ("else",                    (fun x -> Else(x)));

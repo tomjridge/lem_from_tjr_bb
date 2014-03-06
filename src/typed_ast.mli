@@ -306,6 +306,8 @@ and exp_aux = private
   | List of lskips * exp lskips_seplist * lskips
   | Paren of lskips * exp * lskips
   | Begin of lskips * exp * lskips
+  | Aspect of lskips * Name.lskips_t * exp * lskips
+  | Aspect_with_else of lskips * Name.lskips_t * exp * lskips * exp * lskips
   | If of lskips * exp * lskips * exp * lskips * exp
   | Lit of lit
   | Set of lskips * exp lskips_seplist * lskips
@@ -662,6 +664,8 @@ module Exps_in_context(C : Exp_context) : sig
   val mk_vaccessr : Ast.l -> exp -> lskips -> src_nexp -> lskips ->src_nexp -> lskips -> Types.t -> exp
   val mk_paren : Ast.l -> lskips -> exp -> lskips -> Types.t option -> exp
   val mk_begin : Ast.l -> lskips -> exp -> lskips -> Types.t option -> exp
+  val mk_aspect : Ast.l -> lskips -> Name.lskips_t -> exp -> lskips -> Types.t option -> exp
+  val mk_aspect_with_else : Ast.l -> lskips -> Name.lskips_t -> exp -> lskips -> exp -> lskips -> Types.t option -> exp
   val mk_if : Ast.l -> lskips -> exp -> lskips -> exp -> lskips -> exp -> Types.t option -> exp
   val mk_lit : Ast.l -> lit -> Types.t option -> exp
   val mk_set : Ast.l -> lskips -> exp lskips_seplist -> lskips -> Types.t -> exp

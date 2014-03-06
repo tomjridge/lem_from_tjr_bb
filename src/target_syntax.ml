@@ -323,6 +323,14 @@ let rec fix_exp env get_prec e =
           C.mk_begin old_l
             s1 (trans e) s2
             old_t
+      | Aspect(s1,n,e,s2) ->
+          C.mk_aspect old_l
+            s1 n (trans e) s2
+            old_t
+      | Aspect_with_else(s1,n,e1,s2,e2,s3) ->
+          C.mk_aspect_with_else old_l
+            s1 n (trans e1) s2 (trans e2) s3
+            old_t
       | If(s1,e1,s2,e2,s3,e3) ->
           C.mk_if old_l
             s1 (trans e1) s2 (trans e2) s3 (trans e3)

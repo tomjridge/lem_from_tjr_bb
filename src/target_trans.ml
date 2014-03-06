@@ -47,6 +47,16 @@
 let ident_force_pattern_compile = ref false
 let ident_force_dictionary_passing = ref false
 let hol_remove_matches = ref false
+let aspects_filter_excludes = ref []
+let aspects_filter_includes = ref []
+
+let default_aspects_filter n = 
+  let n_string = Name.to_string (Name.strip_lskip n) in
+  if (List.mem n_string (!aspects_filter_includes)) then
+    Some true 
+  else if (List.mem n_string (!aspects_filter_excludes)) then
+    Some false
+  else None
 
 open Typed_ast
 open Typed_ast_syntax
@@ -110,7 +120,10 @@ let ident () =
     extra = []; }
 
 let lem () = 
-  { macros = [Exp_macros (fun env -> [Backend_common.inline_exp_macro Target_lem env]);
+  { macros = [Exp_macros (fun env -> 
+                             let module T = T(struct let env = env end) in
+                                      [Backend_common.inline_exp_macro Target_lem env; 
+                                       T.remove_aspects false default_aspects_filter]);
               Pat_macros (fun env -> [Backend_common.inline_pat_macro Target_lem env])];
     extra = []; }
 
@@ -142,6 +155,7 @@ let hol =
                                T.remove_num_lit;
                                T.remove_set_restr_quant;
                                T.remove_restr_quant Pattern_syntax.is_var_tup_pat;
+                               T.remove_aspects true default_aspects_filter;
                                Backend_common.inline_exp_macro Target_hol env;
                                Patterns.compile_exp (Target_no_ident Target_hol) Patterns.is_hol_pattern_match env]);
               Pat_macros (fun env ->
@@ -178,6 +192,7 @@ let ocaml =
                                T.remove_vector_access;
                                T.remove_vector_sub;
                                T.remove_do;
+                               T.remove_aspects true default_aspects_filter;
                                Patterns.compile_exp (Target_no_ident Target_ocaml) Patterns.is_ocaml_pattern_match env])
              ];
     extra = [(* (fun n -> Rename_top_level.rename_defs_target (Some Target_ocaml) consts fixed_renames [n]) *)]; 
@@ -206,6 +221,7 @@ let isa  =
                        T.remove_set_restr_quant;
                        T.remove_restr_quant Pattern_syntax.is_var_wild_tup_pat;
                        T.remove_set_comp_binding;
+                       T.remove_aspects true default_aspects_filter;
                        Backend_common.inline_exp_macro Target_isa env;
                        T.sort_record_fields;
                        Patterns.compile_exp (Target_no_ident Target_isa) Patterns.is_isabelle_pattern_match env]);
@@ -240,6 +256,7 @@ let coq =
                         T.remove_quant_coq;
                         Backend_common.inline_exp_macro Target_coq env;
                         T.remove_do;
+                        T.remove_aspects true default_aspects_filter;
                         Patterns.compile_exp (Target_no_ident Target_coq) Patterns.is_coq_pattern_match env]);
        Pat_macros (fun env ->
                      let module T = T(struct let env = env end) in

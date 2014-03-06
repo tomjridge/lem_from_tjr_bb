@@ -1057,5 +1057,150 @@ let remove_do _ e =
             Some (C.mk_infix l_unk e1 e2 e3 (Some (exp_to_typ e)))
       | _ -> None
 
+
+let check_aspects_aux_app_infix e = 
+  let (e_op, args, _) = strip_app_infix_exp e in
+  not (is_ext_aspect_exp e_op) &&
+  (if (List.length args = 2) then begin
+    let a1 = List.nth args 0 in
+    let a2 = List.nth args 1 in
+
+    let ok = if (is_ext_aspect_exp a1) then ((not (is_ext_aspect_exp a2)) &&
+                check_equal env.t_env (exp_to_typ a2) (exp_to_typ e)) else
+             (if is_ext_aspect_exp a2 then ((not (is_ext_aspect_exp a1)) && 
+                check_equal env.t_env (exp_to_typ a1) (exp_to_typ e)) else 
+             true) in
+    ok
+  end else  
+    List.for_all (fun e -> not (is_ext_aspect_exp e)) args)
+
+
+let check_aspects_aux_qb (qb : quant_binding) : bool = 
+  match qb with
+    | Qb_var _ -> true
+    | Qb_restr (_, _, _, _, e, _) -> not (is_ext_aspect_exp e)
+
+let check_aspects_aux_letbind (lb : letbind) : bool = 
+  match lb with
+    | ( Let_val (_, _, _, e), _) ->
+        not (is_ext_aspect_exp e)
+    | ( Let_fun (_, ps, ty_opt, _, e), _) ->
+        not (is_ext_aspect_exp e)
+
+let rec check_aspects_aux e =
+  match (C.exp_to_term e) with
+    | Fun (_,_,_,e) -> not (is_ext_aspect_exp e)
+    | Function(_,pes,_) ->
+        (Seplist.for_all  (fun (_,_,e,_) -> not (is_ext_aspect_exp e)) pes)
+    | App _ -> check_aspects_aux_app_infix e
+    | Infix _ -> check_aspects_aux_app_infix e
+    | Record(_,fieldexps,_) ->
+        (Seplist.for_all (fun (_,_,e,_) -> not (is_ext_aspect_exp e)) fieldexps)
+    | Recup(_,e,_,fieldexps,_) ->
+        not (is_ext_aspect_exp e) &&
+        (Seplist.for_all (fun (_,_,e,_) -> not (is_ext_aspect_exp e)) fieldexps)
+    | Field(e,_,_) ->
+        not (is_ext_aspect_exp e) 
+    | Case(_,_,e,_,patexps,_) ->
+        not (is_ext_aspect_exp e) && 
+        (Seplist.for_all (fun (_,_,e,_) -> not (is_ext_aspect_exp e)) patexps)
+    | Typed(_,e,_,_,_) -> true
+    | Let(_,letbind,_,e) ->
+        not (is_ext_aspect_exp e) && check_aspects_aux_letbind letbind
+    | Tup(_,es,_) ->
+        (Seplist.for_all (fun e -> not (is_ext_aspect_exp e)) es)
+    | List _ -> true
+    | Vector (_, es, _) ->
+        (Seplist.for_all (fun e -> not (is_ext_aspect_exp e)) es)
+    | VectorAcc(e1,s1,n,s2) ->
+        not (is_ext_aspect_exp e1)
+    | VectorSub(e,s1,n1,s2,n2,s3) ->
+        not (is_ext_aspect_exp e)
+    | Paren(s1,e,s2) -> true
+    | Begin(s1,e,s2) -> true
+    | Aspect(s1,n,e,s2) ->
+        not (is_ext_aspect_exp e)
+    | Aspect_with_else(s1,n,e1,s2,e2,s3) ->
+        not (is_ext_aspect_exp e1) && not (is_ext_aspect_exp e2)
+    | If(s1,e1,s2,e2,s3,e3) ->
+        not (is_ext_aspect_exp e1) &&
+        not (is_ext_aspect_exp e2) &&
+        not (is_ext_aspect_exp e3)
+    | Set(s1,es,s2) -> true
+    | Setcomp(s1,e1,s2,e2,s3,b) ->
+        not (is_ext_aspect_exp e1) &&
+        not (is_ext_aspect_exp e2) 
+    | Comp_binding(is_lst,s1,e1,s2,s3,qbs,s4,e2,s5) ->
+        not (is_ext_aspect_exp e1) &&
+        not (is_ext_aspect_exp e2) &&
+        (List.for_all check_aspects_aux_qb qbs)
+    | Quant(q,qbs,s,e) ->
+        (List.for_all check_aspects_aux_qb qbs) &&
+        not (is_ext_aspect_exp e)
+    | Do(s1,mid,do_lines,s2,e,s3,t) ->
+       (List.for_all  (function | Do_line(p,s1,e,s2) -> not (is_ext_aspect_exp e)) do_lines) &&
+       is_ext_aspect_exp e
+    | Constant(c) -> true
+    | Var(n) -> true
+    | Backend(sk, i) -> true
+    | Nvar_e(s,n) -> true
+    | Lit li  -> true
+
+let check_aspects e = 
+  let ok = check_aspects_aux e in
+  if ok then () else
+      raise (Reporting_basic.err_type (exp_to_locn e) "aspect without else in a position where it cannot be deleted, please add aspect_else")
+
+let rec is_ext_aspect_exp_filter aspects_filter comp (e :exp) : bool =
+  match C.exp_to_term e with
+    | Aspect (_, n, _, _) -> (aspects_filter n = Some comp)
+    | Paren (_, e, _) -> is_ext_aspect_exp_filter aspects_filter comp e
+    | Begin (_, e, _) -> is_ext_aspect_exp_filter aspects_filter comp e
+    | Typed (_, e, _, _, _) -> is_ext_aspect_exp_filter aspects_filter comp e
+    | _ -> false
+
+
+let remove_aspects remove_all aspects_filter _ e =
+  let l_unk = Ast.Trans(true, "remove_aspects", Some (exp_to_locn e)) in
+  match (C.exp_to_term e) with
+    | (App _ | Infix _) -> 
+        let (_, args, _) = strip_app_infix_exp e in
+        (if (List.length args = 2) then begin
+           let a1 = List.nth args 0 in
+           let a2 = List.nth args 1 in
+           if (is_ext_aspect_exp a1 && (is_ext_aspect_exp_filter aspects_filter false a1)) then
+             Some a2
+           else if (is_ext_aspect_exp a2 && (is_ext_aspect_exp_filter aspects_filter false a2)) then
+             Some a1
+           else None
+        end else None)
+    | List (s1, es, s2) -> 
+        if (Seplist.exists (is_ext_aspect_exp_filter aspects_filter true) es) then
+          Some (C.mk_list l_unk s1 (Seplist.filter (is_ext_aspect_exp_filter aspects_filter true) es) s2 (exp_to_typ e))
+        else
+          None
+    | Set(s1,es,s2) -> 
+        if (Seplist.exists (is_ext_aspect_exp_filter aspects_filter true) es) then
+          Some (C.mk_set l_unk s1 (Seplist.filter (is_ext_aspect_exp_filter aspects_filter true) es) s2 (exp_to_typ e))
+        else
+          None
+    | Aspect(s1,n,e,s2) -> begin match aspects_filter n with
+        | None -> if remove_all then Some e else None
+        | Some true -> Some e
+        | Some false -> None
+      end
+    | Aspect_with_else(s1,n,e1,s2,e2,s3) -> begin
+        match aspects_filter n with
+          | None -> if remove_all then Some e1 else None
+          | Some true -> Some e1
+          | Some false -> Some e2
+      end
+    | _  -> None
+
+
 end
+
+    
+
+
 

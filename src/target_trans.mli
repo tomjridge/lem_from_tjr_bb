@@ -74,3 +74,8 @@ val ident_force_dictionary_passing : bool ref
 (** This flag enables removing top-level matches from definition for the HOL4 backend. *)
 val hol_remove_matches : bool ref 
 
+(** Lists to aspects to include *)
+val aspects_filter_includes : (string list) ref 
+
+(** Lists to aspects to exclude *)
+val aspects_filter_excludes : (string list) ref 
