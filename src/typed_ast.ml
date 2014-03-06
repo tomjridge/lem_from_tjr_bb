@@ -224,8 +224,7 @@ and exp_aux =
   | List of lskips * exp lskips_seplist * lskips
   | Paren of lskips * exp * lskips
   | Begin of lskips * exp * lskips
-  | Aspect of lskips * Name.lskips_t * exp * lskips
-  | Aspect_with_else of lskips * Name.lskips_t * exp * lskips * exp * lskips
+  | Aspect of lskips * Name.lskips_t * exp * (lskips * exp) option * lskips
   | If of lskips * exp * lskips * exp * lskips * exp
   | Lit of lit
   | Set of lskips * exp lskips_seplist * lskips
@@ -596,12 +595,9 @@ let rec alter_init_lskips (lskips_f : lskips -> lskips * lskips) (e : exp) : exp
       | Paren(s1,e,s2) ->
           let (s_new, s_ret) = lskips_f s1 in
             res (Paren(s_new,e,s2)) s_ret
-      | Aspect(s1,n,e,s2) ->
+      | Aspect(s1,n,e,fb_opt,s2) ->
           let (s_new, s_ret) = lskips_f s1 in
-            res (Aspect(s_new,n,e,s2)) s_ret
-      | Aspect_with_else(s1,n,e1,s2,e2,s3) ->
-          let (s_new, s_ret) = lskips_f s1 in
-            res (Aspect_with_else(s_new,n,e1,s2,e2,s3)) s_ret
+            res (Aspect(s_new,n,e,fb_opt,s2)) s_ret
       | Begin(s1,e,s2) ->
           let (s_new, s_ret) = lskips_f s1 in
             res (Begin(s_new,e,s2)) s_ret
@@ -1536,10 +1532,10 @@ module Exps_in_context(D : Exp_context) = struct
             Paren(s1,exp_subst subst e,s2)
         | Begin(s1,e,s2) ->
             Begin(s1,exp_subst subst e,s2)
-        | Aspect(s1,n,e,s2) ->
-            Aspect(s1,n,exp_subst subst e,s2)
-        | Aspect_with_else(s1,n,e1,s2,e2,s3) ->
-            Aspect_with_else(s1,n,exp_subst subst e1,s2,exp_subst subst e2,s3)
+        | Aspect(s1,n,e,None,s2) ->
+            Aspect(s1,n,exp_subst subst e,None,s2)
+        | Aspect(s1,n,e1,Some(s2,e2),s3) ->
+            Aspect(s1,n,exp_subst subst e1,Some (s2,exp_subst subst e2),s3)
         | If(s1,e1,s2,e2,s3,e3) ->
             If(s1, exp_subst subst e1, 
                s2, exp_subst subst e2, 
@@ -2023,24 +2019,19 @@ module Exps_in_context(D : Exp_context) = struct
           { free = exp_to_free e;
             subst = empty_sub; }; }
 
-  let mk_aspect l s1 n e s2 t =
-    let t = check_typ l "mk_aspect" t (fun d -> Some e.typ) in
-      { term = Aspect(s1,n,e,s2);
+  let mk_aspect l s1 n e1 fb_opt s2 t =
+    let t = check_typ l "mk_aspect" t (fun d -> Some e1.typ) in
+      (match fb_opt with
+        | None -> ()
+        | Some (_, e2) -> type_eq l "mk_aspect_with_else" e1.typ e2.typ
+      );
+      { term = Aspect(s1,n,e1,fb_opt,s2);
         locn = l;
         typ = t;
         rest = 
-          { free = exp_to_free e;
-            subst = empty_sub; }; }
-
-  let mk_aspect_with_else l s1 n e1 s2 e2 s3 t =
-    let t = check_typ l "mk_aspect_with_else" t (fun d -> Some e1.typ) in
-      type_eq l "mk_aspect_with_else" e1.typ e2.typ;
-      { term = Aspect_with_else(s1,n,e1,s2,e2,s3);
-        locn = l;
-        typ = t;
-        rest = 
-          { free = merge_free_env false l 
-                     [exp_to_free e1; exp_to_free e2];
+          { free = (match fb_opt with
+               | None -> exp_to_free e1;
+               | Some (_, e2) -> merge_free_env false l [exp_to_free e1; exp_to_free e2]);
             subst = empty_sub; }; }
 
   let mk_if l s1 e1 s2 e2 s3 e3 t =

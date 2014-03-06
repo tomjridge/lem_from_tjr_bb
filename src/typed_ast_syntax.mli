@@ -406,14 +406,15 @@ val strip_infix_exp : exp -> exp * exp list
     is [true]. Otherwise [strip_app_exp] is called and the result is set to [false]. *)
 val strip_app_infix_exp : exp -> exp * exp list * bool
 
-(** [is_aspect_exp e] checks whether [e] is an aspect wrapper *)
-val is_aspect_exp : exp -> bool
+(** [is_aspect_without_fallback_exp e] checks whether [e] is an aspect wrapper without a fallback *)
+val is_aspect_without_fallback_exp : exp -> bool
 
-(** [is_ext_aspect_exp e] checks whether [e] is an aspect wrapper after stripping parenthesis, type annotations etc. *)
-val is_ext_aspect_exp : exp -> bool
+(** [is_ext_aspect_without_fallback_exp e] checks whether [e] is an aspect wrapper without fallback 
+     after stripping parenthesis, type annotations etc. *)
+val is_ext_aspect_without_fallback_exp : exp -> bool
 
-(** [is_aspect_with_else_exp e] checks whether [e] is an aspect wrapper with an explicit alternative. *)
-val is_aspect_with_else_exp : exp -> bool
+(** [is_aspect_with_fallback_exp e] checks whether [e] is an aspect wrapper with an explicit fallback. *)
+val is_aspect_with_fallback_exp : exp -> bool
 
 
 (** {2 Constructing, checking and destructing definitions} *)

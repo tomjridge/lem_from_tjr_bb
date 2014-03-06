@@ -1166,12 +1166,12 @@ let generate_coq_record_update_notation e =
                 ws skips; from_string "(* begin block *)"; exp inside_instance e; ws skips';
                 from_string "(* end block *)"
               ]
-          | Aspect (skips, n, e, skips') ->
+          | Aspect (skips, n, e, None, skips') ->
               Output.flat [
                 ws skips; from_string "(* begin aspect *)"; exp inside_instance e; ws skips';
                 from_string "(* end block *)"
               ]
-          | Aspect_with_else (skips, n, e1, skips', e2, skips'') ->
+          | Aspect (skips, n, e1, Some (skips', e2), skips'') ->
               Output.flat [
                 ws skips; from_string "(* begin aspect *)"; exp inside_instance e1; ws skips';
                 from_string "(* else block "; exp inside_instance e2; ws skips''; from_string " end block *)"

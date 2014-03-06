@@ -785,22 +785,22 @@ let strip_app_infix_exp (e : exp) : exp * exp list * bool =
     let (e, args) = strip_app_exp e in
     (e, args, false)
 
-let is_aspect_with_else_exp (e :exp) : bool =
+let is_aspect_with_fallback_exp (e :exp) : bool =
   match C.exp_to_term e with
-    | Aspect_with_else _ -> true
+    | Aspect (_,_,_,Some _, _) -> true
     | _ -> false
 
-let is_aspect_exp (e :exp) : bool =
+let is_aspect_without_fallback_exp (e :exp) : bool =
   match C.exp_to_term e with
-    | Aspect _ -> true
+    | Aspect (_,_,_,None, _) -> true
     | _ -> false
 
-let rec is_ext_aspect_exp (e :exp) : bool =
+let rec is_ext_aspect_without_fallback_exp (e :exp) : bool =
   match C.exp_to_term e with
-    | Aspect _ -> true
-    | Paren (_, e, _) -> is_ext_aspect_exp e
-    | Begin (_, e, _) -> is_ext_aspect_exp e
-    | Typed (_, e, _, _, _) -> is_ext_aspect_exp e
+    | Aspect (_,_,_,None, _) -> true
+    | Paren (_, e, _) -> is_ext_aspect_without_fallback_exp e
+    | Begin (_, e, _) -> is_ext_aspect_without_fallback_exp e
+    | Typed (_, e, _, _, _) -> is_ext_aspect_without_fallback_exp e
     | _ -> false
 
   
@@ -1047,8 +1047,8 @@ and add_exp_entities (ue : used_entities) (e : exp) : used_entities =
     | List(_,es,_) -> Seplist.fold_left (fun e ue -> add_exp_entities ue e) ue es
     | Paren(_,e,_) -> add_exp_entities ue e
     | Begin(_,e,_) -> add_exp_entities ue e
-    | Aspect(_,_,e,_) -> add_exp_entities ue e
-    | Aspect_with_else(_,_,e1,_,e2,_) -> 
+    | Aspect(_,_,e,None,_) -> add_exp_entities ue e
+    | Aspect(_,_,e1,Some(_,e2),_) -> 
       let ue = add_exp_entities ue e1 in
       let ue = add_exp_entities ue e2 in
       ue
