@@ -124,3 +124,28 @@ The naming conventions of our backends differ. Therefore, it might be beneficial
 Besides `function`s, it is also possible to rename `type`s, `field`s and `module`s. 
 
 
+## Aspects
+Some specifications consists of several, independent features - called *aspects* in the following - that can be combined separately. An example is Tom Ridge's file-system specification. There is the main functionality, then there is a *time* aspect and a *permission* aspect. The time aspect behaves like the main functionality but additionally specifies the behaviour of timestamps of files and directories. The permission aspect additionally models file-permissions and behaves as the main functionality except that it might fail because of missing permissions. These aspects lead to a more complicated specification, which is often unnecessary. Ideally, we would like a specification containing only the main functionality, one with time, one with permissions and one with both aspects. We could then choose, which of these specifications to use in a certain situation.
+
+Keeping several, very similar specifications in sync takes a lot of effort and it is easy for them to differ unintentionally. Lem's *aspects* try to provide a very simple mechanism to deal with this situation. At the simplest level, Lem allows writing expressions like
+
+	begin_aspect aspect_name 
+	   exp_incl 
+	aspect_fallback
+	   exp_excl
+	end_aspect
+	
+You can think of this as a if-then-else expression that can be controlled when calling Lem. If the aspect `aspect_name` is included, it is replaced with `exp_incl`, otherwise with `exp_excl`. By default, all aspects are included. The command line option `-excl_aspect aspect_name` allows excluding aspects. For the `lem` backend, which allows refactoring, there is also a `-incl_aspect aspect_name` command line option that allows removing an aspect from the Lem sources by explicitly inlining it. 
+
+If an aspect is excluded, ideally it should look as if it was never present. Having dummy-fallback expressions might be annoying. For example
+
+	begin_aspect aspect_name some_test aspect_fallback true end_aspect && cond
+
+should ideally become `cond` instead of `true && cond`. For this reason Lem allows aspect-blocks without a fallback value in certain positions. They are allowed in explicitly enumerated sets and lists. In this case it is easy to just drop the elements that come from excluded aspects. More complicated, they are also dropped as arguments of binary operators, if replacing the whole expression with the remaining operator preserves the type. This allows writing e.g.
+
+	begin_aspect aspect_name some_test end_aspect && cond
+	
+which is replaced by either `some_test && cond` or `cond`. There are also optimisations for if-then-else and let-expressions.
+
+
+
