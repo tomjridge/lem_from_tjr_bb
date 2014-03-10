@@ -125,7 +125,7 @@ Besides `function`s, it is also possible to rename `type`s, `field`s and `module
 
 
 ## Aspects
-Some specifications consists of several, independent features - called *aspects* in the following - that can be combined separately. An example is Tom Ridge's file-system specification. There is the main functionality, then there is a *time* aspect and a *permission* aspect. The time aspect behaves like the main functionality but additionally specifies the behaviour of timestamps of files and directories. The permission aspect additionally models file-permissions and behaves as the main functionality except that it might fail because of missing permissions. These aspects lead to a more complicated specification, which is often unnecessary. Ideally, we would like a specification containing only the main functionality, one with time, one with permissions and one with both aspects. We could then choose, which of these specifications to use in a certain situation.
+Some specifications consists of several, independent features - called *aspects* in the following - that can be combined separately. As an example consider a file-system specification. There is the main functionality, then there is a *time* aspect and a *permission* aspect. The time aspect behaves like the main functionality but additionally specifies the behaviour of timestamps of files and directories. The permission aspect additionally models file-permissions and behaves as the main functionality except that it might fail because of missing permissions. These aspects lead to a more complicated specification, which is often unnecessary. Ideally, we would like a specification containing only the main functionality, one with time, one with permissions and one with both aspects. We could then choose, which of these specifications to use in a certain situation.
 
 Keeping several, very similar specifications in sync takes a lot of effort and it is easy for them to differ unintentionally. Lem's *aspects* try to provide a very simple mechanism to deal with this situation. At the simplest level, Lem allows writing expressions like
 
@@ -145,7 +145,14 @@ should ideally become `cond` instead of `true && cond`. For this reason Lem allo
 
 	begin_aspect aspect_name some_test end_aspect && cond
 	
-which is replaced by either `some_test && cond` or `cond`. There are also optimisations for if-then-else and let-expressions.
+which is replaced by either `some_test && cond` or `cond`. Whether to use aspects without fallback is a matter of taste. It leads to cleaner output if the aspect is excluded, but might be confusing for readers not familiar with the detailed semantics of Lem. If you prefer easier readable code, just always include a fallback.
+
+There are a few other optimisations that try to eliminate aspects as much as possible. If after aspect processing 
+
+- `let x = begin_aspect ... end_aspect in exp x` is of the form `let x = x in exp x`, it becomes `exp x`
+- `if begin_aspect ... end_aspect then e_t else e_f` is of the form `if true then e_t else e_f`, it becomes `e_t`
+- `if begin_aspect ... end_aspect then e_t else e_f` is of the form `if false then e_t else e_f`, it becomes `e_f`
+
 
 
 
