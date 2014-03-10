@@ -1162,7 +1162,7 @@ let rec is_ext_aspect_without_fallback_exp_filter aspects_filter comp (e :exp) :
 let remove_aspects_aux remove_all aspects_filter e =
   match C.exp_to_term e with
     | Aspect(s1,n,e1,fb,s2) -> begin match aspects_filter n with
-        | None -> if remove_all then Some e else None
+        | None -> if remove_all then Some e1 else None
         | Some true -> Some e1
         | Some false -> begin 
             match fb with 
