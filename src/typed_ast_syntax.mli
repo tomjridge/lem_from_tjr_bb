@@ -272,10 +272,6 @@ val dest_tf_exp : exp -> bool option
 (** [is_tf_exp v e] checks whether [e] is a [true] or [false] expression. *)
 val is_tf_exp : bool -> exp -> bool
 
-(** [strip_wrapper_exps e] strips parentheisis, type annotations and begin/end from
-    an expression and returns the core. Often it returns the expression unmodified. *)
-val strip_wrapper_exps : exp -> exp
-
 (** Destructor for constants expressions *)
 val dest_const_exp : exp -> const_descr_ref id option
 
@@ -409,16 +405,6 @@ val strip_infix_exp : exp -> exp * exp list
     If [e] is an infix operation [strip_infix_exp] is called and the additional boolean result
     is [true]. Otherwise [strip_app_exp] is called and the result is set to [false]. *)
 val strip_app_infix_exp : exp -> exp * exp list * bool
-
-(** [is_aspect_without_fallback_exp e] checks whether [e] is an aspect wrapper without a fallback *)
-val is_aspect_without_fallback_exp : exp -> bool
-
-(** [is_ext_aspect_without_fallback_exp e] checks whether [e] is an aspect wrapper without fallback 
-     after stripping parenthesis, type annotations etc. *)
-val is_ext_aspect_without_fallback_exp : exp -> bool
-
-(** [is_aspect_with_fallback_exp e] checks whether [e] is an aspect wrapper with an explicit fallback. *)
-val is_aspect_with_fallback_exp : exp -> bool
 
 
 (** {2 Constructing, checking and destructing definitions} *)

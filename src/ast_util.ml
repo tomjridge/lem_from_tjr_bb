@@ -151,10 +151,6 @@ let rec setcomp_bindings not_shadowed (Expr_l(e,l)) =
           scb e
       | Begin(_,e,_) ->
           scb e
-      | Aspect(_,_,e,_) ->
-          scb e
-      | Aspect_with_fallback(_,_,e1,_,e2,_) ->
-          NameSet.union (scb e1) (scb e2)
       | If(_,e1,_,e2,_,e3) ->
           NameSet.union (scb e1) (NameSet.union (scb e2) (scb e3))
       | Cons(e1,_,e2) ->

@@ -149,7 +149,7 @@ let mk_pre_x_l sk1 (sk2,id) sk3 l =
 %token <Ast.terminal> Dot Lparen Rparen Comma Under Arrow As Colon NegLcurly Lcurly Rcurly 
 %token <Ast.terminal> Semi Lsquare Rsquare Fun_ Function_ Bar With Match Let_ And HashZero HashOne
 %token <Ast.terminal> In Of Rec Type Witness Check Rename Module_ Struct End Open_ Import_ Include_ SemiSemi Eof
-%token <Ast.terminal> True False Begin_ Begin_aspect End_aspect Aspect_fallback If_ Then Else Val
+%token <Ast.terminal> True False Begin_ If_ Then Else Val
 %token <Ast.terminal * Ulib.Text.t> AmpAmp BarBar ColonColon Star Plus Eq At GtEq 
 %token <Ast.terminal * Ulib.Text.t> X Tyvar Nvar 
 %token <Ast.terminal * Ulib.Text.t> StarstarX StarX PlusX AtX EqualX GtEqX
@@ -437,10 +437,6 @@ atomic_exp:
     { eloc (Paren($1,$2,$3)) }
   | Begin_ exp End
     { eloc (Begin($1,$2,$3)) }
-  | Begin_aspect X exp End_aspect
-    { eloc (Aspect($1,$2,$3,$4)) }
-  | Begin_aspect X exp Aspect_fallback exp End_aspect
-    { eloc (Aspect_with_fallback($1,$2,$3,$4,$5,$6)) }
   | lit
     { eloc (Lit($1)) }
   | BacktickString 

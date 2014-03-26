@@ -144,8 +144,6 @@ val length : ('a,'s) t -> int
 
 val map : ('a -> 'b) -> ('a,'s) t -> ('b, 's) t
 
-val filter : ('a -> bool) -> ('a,'s) t -> ('a, 's) t
-
 (** Returns None if the function returns None on all of the elements, otherwise
     returns a list that uses the original element where the function returns None
 *)

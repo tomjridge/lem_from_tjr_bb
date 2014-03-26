@@ -324,7 +324,6 @@ instance forall 'a 'b. Ord 'a, Ord 'b => (Ord ('a * 'b))
   let (>=) = pairGreaterEq
 end
 
-
 instance forall 'a 'b. SetType 'a, SetType 'b => (SetType ('a * 'b))
   let setElemCompare = pairCompare setElemCompare setElemCompare
 end

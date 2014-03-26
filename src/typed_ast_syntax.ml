@@ -448,7 +448,6 @@ let rec dest_var_exp (e :exp) : Name.t option =
     Var n -> Some (Name.strip_lskip n)
   | Typed (_, e', _, _, _) -> dest_var_exp e'
   | Paren (_, e', _) -> dest_var_exp e'
-  | Begin (_, e', _) -> dest_var_exp e'
   | _ -> None
 
 let is_var_exp e = not (dest_var_exp e = None)
@@ -785,26 +784,6 @@ let strip_app_infix_exp (e : exp) : exp * exp list * bool =
     let (e, args) = strip_app_exp e in
     (e, args, false)
 
-let is_aspect_with_fallback_exp (e :exp) : bool =
-  match C.exp_to_term e with
-    | Aspect (_,_,_,Some _, _) -> true
-    | _ -> false
-
-let is_aspect_without_fallback_exp (e :exp) : bool =
-  match C.exp_to_term e with
-    | Aspect (_,_,_,None, _) -> true
-    | _ -> false
-
-let rec strip_wrapper_exps (e :exp) : exp =
-  match C.exp_to_term e with
-    | Paren (_, e, _) -> strip_wrapper_exps e
-    | Begin (_, e, _) -> strip_wrapper_exps e
-    | Typed (_, e, _, _, _) -> strip_wrapper_exps e
-    | _ -> e
-
-let is_ext_aspect_without_fallback_exp (e :exp) : bool =
-  is_aspect_without_fallback_exp (strip_wrapper_exps e)
-
   
 (* -------------------------------------------------------------------------- *)
 (* checking properties and extracting specific informations                   *)
@@ -1049,11 +1028,6 @@ and add_exp_entities (ue : used_entities) (e : exp) : used_entities =
     | List(_,es,_) -> Seplist.fold_left (fun e ue -> add_exp_entities ue e) ue es
     | Paren(_,e,_) -> add_exp_entities ue e
     | Begin(_,e,_) -> add_exp_entities ue e
-    | Aspect(_,_,e,None,_) -> add_exp_entities ue e
-    | Aspect(_,_,e1,Some(_,e2),_) -> 
-      let ue = add_exp_entities ue e1 in
-      let ue = add_exp_entities ue e2 in
-      ue
     | If(_,e1,_,e2,_,e3) ->
       let ue = add_exp_entities ue e1 in
       let ue = add_exp_entities ue e2 in

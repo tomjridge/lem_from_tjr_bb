@@ -199,16 +199,6 @@ module Macros (E : sig val env : env end) : sig
       Variable patterns and - if [keep_tup] is set - tuple patterns are kept. *)
   val remove_fun_pats : bool -> exp macro
 
-
-
-  (** {2 Aspects} *)
-
-  (** [check_aspects e] checks that aspects acour only at positions, where they can be easily deleted. *)
-  val check_aspects : exp -> unit
-
-  val remove_aspects : bool -> (Name.lskips_t -> bool option) -> exp macro
-
-
   (** {2 Macros I don't understand} *)
 
 (* TODO: add again *)
@@ -224,4 +214,3 @@ module Macros (E : sig val env : env end) : sig
   val remove_do : exp macro
 
 end
-
