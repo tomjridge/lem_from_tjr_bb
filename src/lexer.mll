@@ -61,6 +61,19 @@ let parse_int lexbuf i =
            Lexing.lexeme_start_p lexbuf,
            "couldn't parse integer "^i)))
 
+(* Update the current location with file name and line number. *)
+let update_loc lexbuf file line =
+  let pos = lexbuf.Lexing.lex_curr_p in
+  let new_file = match file with
+    | None -> pos.Lexing.pos_fname
+    | Some s -> s
+  in
+  lexbuf.Lexing.lex_curr_p <- { pos with
+    Lexing.pos_fname = new_file;
+    Lexing.pos_lnum = line;
+    Lexing.pos_bol = pos.Lexing.pos_cnum;
+  };;
+
 
 let kw_table = 
   List.fold_left
@@ -87,9 +100,6 @@ let kw_table =
      ("true",                    (fun x -> True(x)));
      ("false",                   (fun x -> False(x)));
      ("begin",                   (fun x -> Begin_(x)));
-     ("begin_aspect",            (fun x -> Begin_aspect(x)));
-     ("aspect_fallback",         (fun x -> Aspect_fallback(x)));
-     ("end_aspect",              (fun x -> End_aspect(x)));
      ("if",                      (fun x -> If_(x)));
      ("then",                    (fun x -> Then(x)));
      ("else",                    (fun x -> Else(x)));
@@ -159,7 +169,9 @@ rule token skips = parse
   | "\n"
     { Lexing.new_line lexbuf;
       token (Ast.Nl::skips) lexbuf } 
-  
+  | "#" [' ' '\t']* (['0'-'9']+ as num) [' ' '\t']* ("\"" ([^ '\010' '\013' '"' ]* as name) "\"")? [^ '\010' '\013']* "\n"
+                                        { update_loc lexbuf name (int_of_string num);
+                                          token [] lexbuf }  
   | "."                                 { (Dot(Some(skips))) }
 
   | "("                                 { (Lparen(Some(skips))) }

@@ -290,9 +290,6 @@ module type Target = sig
   val let_in : t
   val let_end : t
   val begin_kwd : t
-  val begin_aspect_kwd : t
-  val aspect_fallback_kwd : t
-  val end_aspect_kwd : t
   val end_kwd : t
   val forall : t
   val exists : t
@@ -501,9 +498,6 @@ module Identity : Target = struct
   let let_in = kwd "in"
   let let_end = emp
   let begin_kwd = kwd "begin"
-  let begin_aspect_kwd = kwd "begin_aspect"
-  let aspect_fallback_kwd = kwd "aspect_fallback"
-  let end_aspect_kwd = kwd "end_aspect"
   let end_kwd = kwd "end"
   let forall = kwd "forall"
   let exists = kwd "exists"
@@ -709,9 +703,6 @@ module Tex : Target = struct
   let let_in = bkwd "in"
   let let_end = emp
   let begin_kwd = bkwd "begin"
-  let begin_aspect_kwd = bkwd "begin aspect"
-  let aspect_fallback_kwd = bkwd "aspect fallback"
-  let end_aspect_kwd = bkwd "end aspect"
   let end_kwd = bkwd "end"
   let forall = kwd "\\forall"
   let exists = kwd "\\exists"
@@ -811,10 +802,6 @@ module Ocaml : Target = struct
   let nexp_start = kwd "(*"
   let nexp_end = kwd "*)"
   let nexp_var = r""
-
-  let begin_aspect_kwd = err "aspect in OCaml"
-  let aspect_fallback_kwd = err "aspect in OCaml"
-  let end_aspect_kwd = err "aspect in OCaml"
 
   let ctor_typ_end _ _ = emp
   let ctor_typ_end' _ _ _ = emp
@@ -934,10 +921,7 @@ module Isa : Target = struct
 
   let begin_kwd = kwd "("
   let end_kwd = kwd ")"
-  let aspect_kwd = err "aspect in Isabelle"
-  let aspect_fallback_kwd = err "aspect in Isabelle"
-  let end_aspect_kwd = err "aspect in Isabelle"
-
+  
   let forall = kwd "\\<forall>"
   let exists = kwd "\\<exists>"
 
@@ -1131,9 +1115,6 @@ module Hol : Target = struct
   let let_in = kwd "in"
   let let_end = emp
   let begin_kwd = kwd "("
-  let begin_aspect_kwd = err "aspect in HOL"
-  let aspect_fallback_kwd = err "aspect in HOL"
-  let end_aspect_kwd = err "aspect in HOL"
   let end_kwd = kwd ")"
   let forall = kwd "!"
   let exists = kwd "?"
@@ -1753,16 +1734,6 @@ match C.exp_to_term e with
   | Begin(s1,e,s2) ->
       ws s1 ^ T.begin_kwd ^ exp print_backend e ^ ws s2 ^ T.end_kwd
 
-  | Aspect(s1,n,e,None,s2) ->
-      ws s1 ^ T.begin_aspect_kwd ^ 
-      Name.to_output Component n ^ exp print_backend e ^ ws s2 ^ T.end_aspect_kwd
-
-  | Aspect(s1,n,e1,Some(s2,e2),s3) ->
-      ws s1 ^ T.begin_aspect_kwd ^ 
-      Name.to_output Component n ^ exp print_backend e1 ^ ws s2 ^ 
-      T.aspect_fallback_kwd ^ exp print_backend e2 ^ ws s3 ^ 
-      T.end_aspect_kwd
-
   | If(s1,e1,s2,e2,s3,e3) ->
       block is_user_exp 0 (
       ws s1 ^
@@ -2303,15 +2274,14 @@ let rec isa_def_extra (gf:extra_gen_flags) d l : Output.t = match d with
       end
       else emp
   | Lemma (_, lty, targets, (n, _), sk1, e) when (extra_gen_flags_gen_lty gf lty && in_target targets) -> begin
-      let theorem_name = (Name.to_string (Name.strip_lskip n)) in
       let lem_st = match lty with
                      | Ast.Lemma_theorem _ -> "theorem"
                      | _ -> "lemma" in
       let solve = match lty with
                      | Ast.Lemma_assert _ -> "by eval"
-                     | _ -> String.concat "" ["(* Theorem: "; theorem_name; "*)(* try *) by auto"] in
+                     | _ -> "(* try *) by auto" in
       (kwd lem_st ^ space ^
-      kwd theorem_name ^ ws sk1 ^ kwd ":" ^
+      kwd (Name.to_string (Name.strip_lskip n)) ^ ws sk1 ^ kwd ":" ^
       new_line ^
       kwd "\"" ^
       exp false e ^
@@ -2353,14 +2323,16 @@ let rec hol_def_extra gf d l : Output.t = match d with
              new_line
            end
          | _ -> begin 
-             let n_s = (Name.to_string (Name.strip_lskip n)) in
-             let start = Format.sprintf "val %s = store_thm(\"%s\",\n" n_s n_s in
+             let start = begin
+               let n_s = (Name.to_string (Name.strip_lskip n)) in
+               Format.sprintf "val %s = store_thm(\"%s\",\n" n_s n_s 
+             end in
              kwd start ^
              kwd "``" ^
              exp false e' ^
              kwd "``," ^
              new_line ^
-             meta (String.concat "" ["  (* Theorem: "; n_s; "*)(* your proof *) ALL_TAC"]) ^
+             meta "  (* your proof *) ALL_TAC" ^
              new_line ^
              kwd ");" ^
              new_line ^
