@@ -49,9 +49,6 @@ default_instance forall 'a. SetType 'a => ( MapKeyType 'a )
   let mapKeyCompare = setElemCompare
 end
 
-(* Ugly hack *)
-let inline {ocaml} mapKeyCompare = defaultCompare
-
 
 (* -------------------------------------------------------------------------- *)
 (* Empty maps                                                                 *)

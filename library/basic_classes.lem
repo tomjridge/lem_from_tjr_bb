@@ -260,12 +260,6 @@ default_instance forall 'a. ( SetType 'a )
   let setElemCompare = defaultCompare
 end
 
-(* horrible hack! just for testing. Turning type classes of in OCaml *)
-let inline {ocaml} (=)  = unsafe_structural_equality
-let inline {ocaml} (<>) = unsafe_structural_inequality
-let inline {ocaml} setElemCompare = defaultCompare
-
-
 (* ========================================================================== *)
 (* Instantiations                                                             *)
 (* ========================================================================== *)
