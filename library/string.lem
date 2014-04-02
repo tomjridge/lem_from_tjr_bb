@@ -121,19 +121,6 @@ declare ocaml    target_rep function stringConcat s = `String.concat` "" s
 
 assert stringConcat_0 : (stringConcat ["H"; "e"; "l"; "l"; "o"] = "Hello")
 
-(* --------------------------- *)
-(* equality                    *)
-(* --------------------------- *)
-
-val stringEquality : string -> string -> bool
-declare coq target_rep function stringEquality = `string_equal`
-let inline {ocaml;hol;isabelle} stringEquality = unsafe_structural_equality
-
-instance (Eq string)
-  let (=)      = stringEquality
-  let (<>) l r = not (stringEquality l r)
-end
-
 
 (* ----------------------------*)
 (* setting up pattern matching *)
