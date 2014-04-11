@@ -1,4 +1,7 @@
 declare {isabelle;ocaml;hol;coq} rename module = lem_assert_false_extra
 
+open import Function_extra
+
 val assert_false : forall 'a. 'a
+let assert_false = failwith "assert-false"
 declare ocaml target_rep function assert_false = `assert` `false`
