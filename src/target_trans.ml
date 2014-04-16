@@ -47,6 +47,7 @@
 let ident_force_pattern_compile = ref false
 let ident_force_dictionary_passing = ref false
 let hol_remove_matches = ref false
+let prover_remove_failwith = ref false
 
 open Typed_ast
 open Typed_ast_syntax
@@ -136,6 +137,10 @@ let hol =
               Pat_macros (fun env -> [Backend_common.inline_pat_macro Target_hol env]);
               Exp_macros (fun env ->
                             let module T = T(struct let env = env end) in
+                              (if !prover_remove_failwith then
+                                [T.remove_failwith_matches]
+                               else
+                                []) @
                               [T.remove_list_comprehension;
                                T.list_quant_to_set_quant;
                     	       T.remove_setcomp;
@@ -187,7 +192,13 @@ let isa  =
   { macros =
      indreln_macros @
      dictionary_macros (Target_no_ident Target_isa) @
-     [Def_macros (fun env ->
+     [Exp_macros (fun env ->
+        let module T = T(struct let env = env end) in
+          if !prover_remove_failwith then
+            [T.remove_failwith_matches]
+          else
+            []);
+      Def_macros (fun env ->
                     [M.remove_vals;
                      M.remove_opens;
                      M.remove_indrelns_true_lhs;
@@ -232,6 +243,10 @@ let coq =
        Pat_macros (fun env -> [Backend_common.inline_pat_macro Target_coq env]);
        Exp_macros (fun env -> 
                      let module T = T(struct let env = env end) in
+                      (if !prover_remove_failwith then
+                       [T.remove_failwith_matches]
+                      else
+                       []) @
                        [T.remove_singleton_record_updates;
                         T.remove_multiple_record_updates;
                         T.remove_list_comprehension;
