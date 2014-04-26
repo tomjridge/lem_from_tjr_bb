@@ -146,6 +146,31 @@ let sort_record_fields _ e =
       | _ -> None
 ;;
 
+let remove_failwith_matches _ e =
+  let l_unk = Ast.Trans(true, "remove_failwith_matches", Some (exp_to_locn e)) in
+    match C.exp_to_term e with
+      | Case (flag, skips, scrutinee, skips', pat_skips_exp_loc_seplist, skips'') ->
+        let (fail_ref, _)      = get_const E.env "fail" in
+        let (fail_with_ref, _) = get_const E.env "failwith" in
+        let exp_contains_fail_or_failwith loc exp =
+          match C.exp_to_term (fst (strip_app_exp exp)) with
+            | Constant const_descr_ref_id ->
+                (const_descr_ref_id.descr = fail_ref) || (const_descr_ref_id.descr = fail_with_ref)
+            | _ -> false
+        in
+        let filter =
+          Seplist.filter (fun (pat, skips, exp, loc) ->
+            not (exp_contains_fail_or_failwith loc exp)
+          ) pat_skips_exp_loc_seplist
+        in
+        if filter = pat_skips_exp_loc_seplist then
+          None
+        else
+          let res = C.mk_case flag l_unk skips scrutinee skips' filter skips'' None in
+            Some res
+      | _ -> None
+;;
+
 (* Turn function | pat1 -> exp1 ... | patn -> expn end into
  * fun x -> match x with | pat1 -> exp1 ... | patn -> expn end *)
 let remove_function _ e = Patterns.remove_function E.env (fun e -> e) e
