@@ -276,12 +276,20 @@ let string_split c s =
   with Not_found -> (List.rev acc, String.sub s start (String.length s - start)) 
   in aux [] 0
 
+let is_lowercase = function
+  |'a' .. 'z' -> true
+  | _ -> false
+
+let is_uppercase = function
+  |'A' .. 'Z' -> true
+  | _ -> false
+
 let uncapitalize_prefix = 
   let uncapitalize_pos (x:string) (p:int) : bool =     
     if not (p < String.length x) then false else
     begin
       let c = String.get x p in
-      if Str.string_match (Str.regexp "[A-Z]") (String.make 1 c) 0 then
+      if is_uppercase c then
         let c' = Char.lowercase c in
         let _ = String.set x p c' in
         true

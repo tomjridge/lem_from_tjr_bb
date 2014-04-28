@@ -930,8 +930,16 @@ let generate_coq_record_update_notation e =
                 match exp_opt with
                   | None -> emp
                   | Some e ->
-                      Output.flat [
-                        from_string "("; exp inside_instance e; from_string ": Prop)"
+                    match dest_and_exps A.env e with
+                    | [] -> emp
+                    | ants ->
+                      flat [
+                        concat_str " -> "
+                          (List.map (fun e ->
+                               flat [ from_string "(";
+                                      exp inside_instance e;
+                                      from_string ":Prop)" ]) ants);
+                        from_string " -> "
                       ]
               in
               (* Indrel TODO This does not match variables with type annotations *)
@@ -954,7 +962,7 @@ let generate_coq_record_update_notation e =
               let relation_name = from_string (Name.to_string name) in
                 Output.flat [
                   constructor_name; from_string ": ";
-                  binder; bound_variables; binder_sep; antecedent; from_string " -> ";
+                  binder; bound_variables; binder_sep; antecedent;
                   relation_name; from_string " "; index_free_vars_typeset; from_string " "; indices
                 ], index_free_vars
             ) bodies
@@ -980,7 +988,7 @@ let generate_coq_record_update_notation e =
         ) gathered
       in
         Output.flat [
-          from_string "\nInductive "; concat_str "\nand " indrelns; from_string "."
+          from_string "\nInductive "; concat_str "\nwith " indrelns; from_string "."
         ]
     and let_body inside_instance i_ref_opt top_level tv_set ((lb, _):letbind) =
       match lb with
