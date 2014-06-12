@@ -3201,25 +3201,26 @@ module Make(A : sig val avoid : var_avoid_f;; val env : env;; val dir : string e
     let module B = F(Identity)(C)(Dummy) in
       B.defs_to_rope defs
 
-  let lem_defs defs =
-    let module B = F(Lem)(C)(Dummy) in
-      B.defs_to_rope defs
-
-  let html_defs defs =
-    let module B = F(Html)(C)(Dummy) in
-      B.defs_to_rope defs
-
-  let tex_defs defs =
-    let module B = F(Tex)(C)(Dummy) in
-      B.defs_to_rope defs
-
-  let tex_inc_defs defs =
-    let module B = F(Tex)(C)(Dummy) in
-      B.defs_inc defs
-
   module Comment_def = struct
     let comment_def d = ident_defs ([d],None)
   end
+
+  let lem_defs defs =
+    let module B = F(Lem)(C)(Comment_def) in
+      B.defs_to_rope defs
+
+  let html_defs defs =
+    let module B = F(Html)(C)(Comment_def) in
+      B.defs_to_rope defs
+
+  let tex_defs defs =
+    let module B = F(Tex)(C)(Comment_def) in
+      B.defs_to_rope defs
+
+  let tex_inc_defs defs =
+    let module B = F(Tex)(C)(Comment_def) in
+      B.defs_inc defs
+
 
   let hol_defs defs =
     let module B = F(Hol)(C)(Comment_def) in
@@ -3242,21 +3243,21 @@ module Make(A : sig val avoid : var_avoid_f;; val env : env;; val dir : string e
       B.coq_defs defs
 
   let ident_exp e = 
-    let module B = F(Identity)(C)(Dummy) in
+    let module B = F(Identity)(C)(Comment_def) in
     let (e', _) = alter_init_lskips (fun _ -> (None, None)) e in
     B.exp_to_rope e'
 
   let ident_pat p = 
-    let module B = F(Identity)(C)(Dummy) in
+    let module B = F(Identity)(C)(Comment_def) in
     let (p', _) = pat_alter_init_lskips (fun _ -> (None, None)) p in
     B.pat_to_rope p'
 
   let ident_src_t t = 
-    let module B = F(Identity)(C)(Dummy) in
+    let module B = F(Identity)(C)(Comment_def) in
     B.src_t_to_rope t
 
   let ident_typ t = 
-    let module B = F(Identity)(C)(Dummy) in
+    let module B = F(Identity)(C)(Comment_def) in
     B.typ_to_rope t
 
   let ident_def d = 

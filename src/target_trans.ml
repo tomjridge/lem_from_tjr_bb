@@ -117,8 +117,10 @@ let lem () =
 
 
 let tex =
-  { macros = [];
-    extra = []; }
+  { macros = [Def_macros (fun env -> [M.remove_opens])];
+    extra = [(* (fun n -> Rename_top_level.rename_nested_module [n]);  
+             (fun n -> Rename_top_level.rename_defs_target (Some Target_hol) consts fixed_renames [n]);*)
+             Rename_top_level.flatten_modules];}
 
 let hol =
   { macros = indreln_macros @
